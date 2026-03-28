@@ -2,71 +2,48 @@ import streamlit as st
 import yfinance as yf
 import matplotlib.pyplot as plt
 
-# Title
-st.title("📊 Stock Market Dashboard")
+st.title("📊 30+ Stock Comparison Dashboard")
 
-# Input
-stock = st.text_input("Enter Stock Name (Example: RELIANCE.NS)", "RELIANCE.NS")
+# Default 30 stocks (India example)
+default_stocks = "RELIANCE.NS,TCS.NS,INFY.NS,HDFCBANK.NS,ICICIBANK.NS,SBIN.NS,ITC.NS,LT.NS,HCLTECH.NS,WIPRO.NS,AXISBANK.NS,KOTAKBANK.NS,BAJFINANCE.NS,ASIANPAINT.NS,MARUTI.NS,TITAN.NS,SUNPHARMA.NS,ULTRACEMCO.NS,ONGC.NS,NTPC.NS,POWERGRID.NS,TATAMOTORS.NS,JSWSTEEL.NS,COALINDIA.NS,INDUSINDBK.NS,ADANIENT.NS,ADANIPORTS.NS,BPCL.NS,BRITANNIA.NS,CIPLA.NS"
 
-# Time period
+stocks_input = st.text_area("Enter Stocks (comma separated)", default_stocks)
+
 period = st.selectbox("Select Time Period", ["1mo", "3mo", "6mo", "1y"])
 
-# Button
 if st.button("Show Data"):
 
-    # Get data
-    data = yf.download(stock, period=period)
+    stocks = stocks_input.split(",")
 
-    # Show raw data
-    st.write("Raw Data:", data.tail())
+    plt.figure(figsize=(12,6))
 
-    if data.empty:
-        st.write("❌ Invalid stock name")
-    else:
-        # Clean data ONLY ONCE
+    st.subheader("📊 Combined Chart (All Stocks)")
+
+    for stock in stocks:
+        stock = stock.strip()
+
+        data = yf.download(stock, period=period)
+
+        if data.empty:
+            continue
+
         prices = list(data['Close'].dropna())
 
-        # Check data
-        st.write("Total Data Points:", len(prices))
-
         if len(prices) < 2:
-            st.write("⚠ Not enough data")
-        else:
-            # Show prices
-            st.subheader("📋 Prices")
-            st.write(prices)
+            continue
 
-            # Chart
-            st.subheader("📊 Price Chart")
-            plt.figure()
-            plt.plot(prices, marker='o')
-            plt.title(stock)
-            plt.xlabel("Days")
-            plt.ylabel("Price")
-            st.pyplot(plt)
+        # Normalize data (VERY IMPORTANT for comparison)
+        base = prices[0]
+        normalized = [(p/base)*100 for p in prices]
 
-            # Daily Analysis
-            st.subheader("📉 Daily Analysis")
-            for i in range(1, len(prices)):
-                if prices[i] > prices[i-1]:
-                    st.write(f"Day {i+1}: Increased 📈")
-                elif prices[i] < prices[i-1]:
-                    st.write(f"Day {i+1}: Decreased 📉")
-                else:
-                    st.write(f"Day {i+1}: No Change ➖")
+        plt.plot(normalized, label=stock)
 
-            # Summary
-            st.subheader("📊 Summary")
+        # Show small summary
+        change = ((prices[-1] - prices[0]) / prices[0]) * 100
+        st.write(f"{stock} → {change:.2f}%")
 
-            avg = sum(prices) / len(prices)
-            max_price = max(prices)
-            min_price = min(prices)
-
-            st.write(f"Average Price: {avg:.2f}")
-            st.write(f"Highest Price: {max_price:.2f}")
-            st.write(f"Lowest Price: {min_price:.2f}")
-
-            # Percentage Change
-            if prices[0] != 0:
-                change = ((prices[-1] - prices[0]) / prices[0]) * 100
-                st.write(f"📈 Percentage Change: {change:.2f}%")
+    plt.legend(fontsize=6)
+    plt.title("Stock Comparison (Normalized)")
+    plt.xlabel("Days")
+    plt.ylabel("Growth (%)")
+    st.pyplot(plt)
