@@ -46,14 +46,16 @@ if st.button("Show Data"):
             st.pyplot(plt)
 
             # Daily Analysis
-            st.subheader("📉 Daily Analysis")
-            for i in range(1, len(prices)):
-                if prices[i] > prices[i-1]:
-                    st.write(f"Day {i+1}: Increased 📈")
-                elif prices[i] < prices[i-1]:
-                    st.write(f"Day {i+1}: Decreased 📉")
-                else:
-                    st.write(f"Day {i+1}: No Change ➖")
+          st.subheader("📊 Price Chart")
+
+days = list(range(1, len(prices) + 1))
+
+plt.figure()
+plt.plot(days, prices, marker='o')
+plt.title(stock)
+plt.xlabel("Days")
+plt.ylabel("Price")
+st.pyplot(plt)
 
             # Summary
             st.subheader("📊 Summary")
