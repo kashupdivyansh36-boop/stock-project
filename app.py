@@ -42,5 +42,9 @@ if st.button("Show Data"):
                 st.write(f"Day {i+1}: No Change ➖")
 
         # Percentage Change
-        change = ((prices[-1] - prices[0]) / prices[0]) * 100
-        st.write(f"📊 Percentage Change: {change:.2f}%")
+if len(prices) > 1 and prices[0] != 0:
+    change = ((prices[-1] - prices[0]) / prices[0]) * 100
+    st.write(f"📊 Percentage Change: {change:.2f}%")
+else:
+    st.write("⚠ Not enough data to calculate change")
+  
