@@ -12,7 +12,7 @@ stock = st.text_input("Enter Stock Name (Example: RELIANCE.NS)", "RELIANCE.NS")
 if st.button("Show Data"):
 
     # Fetch data
-    data = yf.download(stock, period="10d")
+    data = yf.download(stock, period="1mo")
 
     if data.empty:
         st.write("❌ Invalid stock name")
