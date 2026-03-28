@@ -17,10 +17,13 @@ if st.button("Show Data"):
     # Get data
     data = yf.download(stock, period=period)
 
+    # Show raw data
+    st.write("Raw Data:", data.tail())
+
     if data.empty:
         st.write("❌ Invalid stock name")
     else:
-        # Clean data (best method)
+        # Clean data ONLY ONCE
         prices = list(data['Close'].dropna())
 
         # Check data
@@ -30,7 +33,7 @@ if st.button("Show Data"):
             st.write("⚠ Not enough data")
         else:
             # Show prices
-            st.subheader("📋 Prices (Array)")
+            st.subheader("📋 Prices")
             st.write(prices)
 
             # Chart
