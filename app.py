@@ -3,10 +3,13 @@ import yfinance as yf
 import matplotlib.pyplot as plt
 
 # Title
-st.title("📊 Stock Market Dashboard")
+st.title("📊 Multi Stock Market Dashboard")
 
-# Input
-stock = st.text_input("Enter Stock Name (Example: RELIANCE.NS)", "RELIANCE.NS")
+# Input multiple stocks
+stocks_input = st.text_input(
+    "Enter Stock Names (comma separated)",
+    "RELIANCE.NS,TCS.NS,INFY.NS"
+)
 
 # Time period
 period = st.selectbox("Select Time Period", ["1mo", "3mo", "6mo", "1y"])
@@ -14,59 +17,44 @@ period = st.selectbox("Select Time Period", ["1mo", "3mo", "6mo", "1y"])
 # Button
 if st.button("Show Data"):
 
-    # Get data
-    data = yf.download(stock, period=period)
+    # Convert input into list
+    stocks = stocks_input.split(",")
 
-    # Show raw data
-    st.write("Raw Data:", data.tail())
+    for stock in stocks:
+        stock = stock.strip()  # remove spaces
 
-    if data.empty:
-        st.write("❌ Invalid stock name")
-    else:
-        # Clean data ONLY ONCE
+        st.subheader(f"📌 {stock}")
+
+        # Fetch data
+        data = yf.download(stock, period=period)
+
+        if data.empty:
+            st.write("❌ No data found")
+            continue
+
+        # Clean data
         prices = list(data['Close'].dropna())
-
-        # Check data
-        st.write("Total Data Points:", len(prices))
 
         if len(prices) < 2:
             st.write("⚠ Not enough data")
-        else:
-            # Show prices
-            st.subheader("📋 Prices")
-            st.write(prices)
+            continue
 
-            # Chart
-            st.subheader("📊 Price Chart")
-            plt.figure()
-            plt.plot(prices, marker='o')
-            plt.title(stock)
-            plt.xlabel("Days")
-            plt.ylabel("Price")
-            st.pyplot(plt)
+        # Show prices
+        st.write("Total Data Points:", len(prices))
 
-            # Daily Analysis
-            st.subheader("📉 Daily Analysis")
-            for i in range(1, len(prices)):
-                if prices[i] > prices[i-1]:
-                    st.write(f"Day {i+1}: Increased 📈")
-                elif prices[i] < prices[i-1]:
-                    st.write(f"Day {i+1}: Decreased 📉")
-                else:
-                    st.write(f"Day {i+1}: No Change ➖")
+        # Chart
+        plt.figure()
+        plt.plot(prices, marker='o')
+        plt.title(stock)
+        plt.xlabel("Days")
+        plt.ylabel("Price")
+        st.pyplot(plt)
 
-            # Summary
-            st.subheader("📊 Summary")
+        # Percentage Change
+        if prices[0] != 0:
+            change = ((prices[-1] - prices[0]) / prices[0]) * 100
+            st.write(f"📈 Change: {change:.2f}%")
 
-            avg = sum(prices) / len(prices)
-            max_price = max(prices)
-            min_price = min(prices)
-
-            st.write(f"Average Price: {avg:.2f}")
-            st.write(f"Highest Price: {max_price:.2f}")
-            st.write(f"Lowest Price: {min_price:.2f}")
-
-            # Percentage Change
-            if prices[0] != 0:
-                change = ((prices[-1] - prices[0]) / prices[0]) * 100
-                st.write(f"📈 Percentage Change: {change:.2f}%")
+        # Summary
+        avg = sum(prices) / len(prices)
+        st.write(f"Average Price: {avg:.2f}")
