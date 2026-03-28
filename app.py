@@ -8,37 +8,32 @@ st.title("📊 Stock Market Dashboard")
 # Input
 stock = st.text_input("Enter Stock Name (Example: RELIANCE.NS)", "RELIANCE.NS")
 
-# Select time period
-period = st.selectbox("Select Time Period", ["10d", "1mo", "3mo", "6mo", "1y"])
+# Time period
+period = st.selectbox("Select Time Period", ["1mo", "3mo", "6mo", "1y"])
 
 # Button
 if st.button("Show Data"):
 
-    # Fetch data
+    # Get data
     data = yf.download(stock, period=period)
 
     if data.empty:
-        st.write("❌ Invalid stock name or no data available")
+        st.write("❌ Invalid stock name")
     else:
-        # Clean data safely
-        prices = []
-        for p in data['Close']:
-            try:
-                if p is not None:
-                    prices.append(float(p))
-            except:
-                continue
+        # Clean data (best method)
+        prices = list(data['Close'].dropna())
 
-        # Check if enough data
+        # Check data
+        st.write("Total Data Points:", len(prices))
+
         if len(prices) < 2:
-            st.write("⚠ Not enough valid data to analyze")
+            st.write("⚠ Not enough data")
         else:
             # Show prices
             st.subheader("📋 Prices (Array)")
             st.write(prices)
-            st.write("Total Days:", len(prices))
 
-            # Plot chart
+            # Chart
             st.subheader("📊 Price Chart")
             plt.figure()
             plt.plot(prices, marker='o')
@@ -57,7 +52,7 @@ if st.button("Show Data"):
                 else:
                     st.write(f"Day {i+1}: No Change ➖")
 
-            # Summary Analysis
+            # Summary
             st.subheader("📊 Summary")
 
             avg = sum(prices) / len(prices)
@@ -72,5 +67,3 @@ if st.button("Show Data"):
             if prices[0] != 0:
                 change = ((prices[-1] - prices[0]) / prices[0]) * 100
                 st.write(f"📈 Percentage Change: {change:.2f}%")
-            else:
-                st.write("⚠ Cannot calculate percentage change")
