@@ -2,11 +2,10 @@ import streamlit as st
 import matplotlib.pyplot as plt
 
 # ---------------- ARRAY STORAGE ----------------
-# stocks = { "TATA": [100,120,110] }
 if "stocks" not in st.session_state:
     st.session_state.stocks = {}
 
-st.title("📊 Stock Price Tracker (Array Based)")
+st.title("📊 Stock Price Tracker (Time-Based Analysis)")
 
 # ---------------- INPUT ----------------
 st.sidebar.header("➕ Add Stock Data")
@@ -14,16 +13,12 @@ st.sidebar.header("➕ Add Stock Data")
 stock_name = st.sidebar.text_input("Enter Stock Name")
 price = st.sidebar.number_input("Enter Price (₹)", min_value=0.0)
 
-# ---------------- INSERT INTO ARRAY ----------------
 if st.sidebar.button("Add Price"):
     if stock_name:
-        # Create array if not exists
         if stock_name not in st.session_state.stocks:
-            st.session_state.stocks[stock_name] = []   # ARRAY CREATED
+            st.session_state.stocks[stock_name] = []  # ARRAY
 
-        # Insert into array
-        st.session_state.stocks[stock_name].append(price)
-
+        st.session_state.stocks[stock_name].append(price)  # INSERT
         st.success(f"Added ₹{price} to {stock_name}")
     else:
         st.error("Enter stock name!")
@@ -32,46 +27,77 @@ if st.sidebar.button("Add Price"):
 if st.session_state.stocks:
 
     selected_stock = st.selectbox(
-        "Select Stock",
+        "📌 Select Stock",
         list(st.session_state.stocks.keys())
     )
 
-    # ARRAY FETCH
-    prices = st.session_state.stocks[selected_stock]
+    prices = st.session_state.stocks[selected_stock]  # ARRAY
 
-    st.subheader("📋 Stored Prices (Array)")
-    st.write(prices)
+    # ---------------- TIME FILTER ----------------
+    st.subheader("⏳ Select Time Range")
 
-    # ---------------- ARRAY ITERATION ----------------
-    st.subheader("📊 Price List")
-    for i in range(len(prices)):
-        st.write(f"Day {i+1}: ₹{prices[i]}")
+    time_option = st.selectbox(
+        "Choose Analysis Period",
+        ["1 Day", "5 Days", "1 Month", "3 Months", "6 Months", "1 Year"]
+    )
+
+    # Map time to number of days
+    time_map = {
+        "1 Day": 1,
+        "5 Days": 5,
+        "1 Month": 30,
+        "3 Months": 90,
+        "6 Months": 180,
+        "1 Year": 365
+    }
+
+    days = time_map[time_option]
+
+    # ---------------- ARRAY SLICING ----------------
+    if len(prices) >= days:
+        filtered_prices = prices[-days:]   # LAST N DAYS
+    else:
+        filtered_prices = prices[:]        # ALL DATA
+
+    st.subheader(f"📋 Data for Last {len(filtered_prices)} Days")
+    st.write(filtered_prices)
 
     # ---------------- GRAPH ----------------
-    st.subheader("📈 Graph")
+    st.subheader("📈 Price Chart")
+
     fig, ax = plt.subplots()
-    ax.plot(prices, marker='o')
+    ax.plot(filtered_prices, marker='o')
+    ax.set_title(f"{selected_stock} ({time_option})")
+    ax.set_xlabel("Days")
+    ax.set_ylabel("Price (₹)")
+
     st.pyplot(fig)
 
-    # ---------------- ANALYSIS USING ARRAY ----------------
+    # ---------------- ANALYSIS ----------------
     st.subheader("📊 Analysis")
 
     total = 0
-    for price in prices:   # ARRAY LOOP
-        total += price
+    for p in filtered_prices:   # ARRAY LOOP
+        total += p
 
-    avg = total / len(prices)
+    avg = total / len(filtered_prices)
 
     st.write(f"Average Price: ₹{avg:.2f}")
-    st.write(f"Max Price: ₹{max(prices)}")
-    st.write(f"Min Price: ₹{min(prices)}")
+    st.write(f"Highest Price: ₹{max(filtered_prices)}")
+    st.write(f"Lowest Price: ₹{min(filtered_prices)}")
 
     # ---------------- PRICE CHANGE ----------------
     st.subheader("📉 Daily Change")
 
-    for i in range(1, len(prices)):
-        change = prices[i] - prices[i-1]
+    for i in range(1, len(filtered_prices)):
+        change = filtered_prices[i] - filtered_prices[i-1]
         st.write(f"Day {i} → Day {i+1}: ₹{change}")
+
+    # ---------------- TREND ----------------
+    if filtered_prices[-1] > filtered_prices[0]:
+        st.success("📈 Uptrend")
+    else:
+        st.error("📉 Downtrend")
 
 else:
     st.info("No data available")
