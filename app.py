@@ -1,49 +1,54 @@
 import streamlit as st
-import yfinance as yf
 import matplotlib.pyplot as plt
 
+# Initialize session state (acts like array storage)
+if "prices" not in st.session_state:
+    st.session_state.prices = []
+
 # Title
-st.title("📊 Stock Market Dashboard")
+st.title("📊 Stock Price Tracker Dashboard")
 
-# Input
-stock = st.text_input("Enter Stock Name (Example: RELIANCE.NS)", "RELIANCE.NS")
+# Input section
+st.subheader("➕ Add Daily Stock Price")
+price = st.number_input("Enter Price (₹)", min_value=0.0, step=1.0)
 
-# Time period
-period = st.selectbox("Select Time Period", ["1mo", "3mo", "6mo", "1y"])
+if st.button("Add Price"):
+    st.session_state.prices.append(price)
+    st.success(f"Added ₹{price}")
 
-# Button
-if st.button("Show Data"):
+# Display prices
+if st.session_state.prices:
+    st.subheader("📋 Stored Prices")
+    st.write(st.session_state.prices)
 
-    data = yf.download(stock, period=period)
+    # Plot graph
+    st.subheader("📈 Price Chart")
 
-    st.write("Raw Data:", data.tail())
+    fig, ax = plt.subplots()
+    ax.plot(st.session_state.prices, marker='o')
+    ax.set_xlabel("Days")
+    ax.set_ylabel("Price (₹)")
+    ax.set_title("Stock Price Movement")
 
-    if data.empty:
-        st.write("❌ Invalid stock name")
+    st.pyplot(fig)
+
+    # Analysis
+    st.subheader("📊 Analysis")
+
+    prices = st.session_state.prices
+    avg_price = sum(prices) / len(prices)
+    max_price = max(prices)
+    min_price = min(prices)
+
+    st.write(f"Average Price: ₹{avg_price:.2f}")
+    st.write(f"Highest Price: ₹{max_price}")
+    st.write(f"Lowest Price: ₹{min_price}")
+
+    # Trend
+    if prices[-1] > prices[0]:
+        st.success("📈 Upward Trend")
     else:
-        prices = list(data['Close'].dropna())
+        st.error("📉 Downward Trend")
 
-        st.write("Total Data Points:", len(prices))
-
-        if len(prices) < 2:
-            st.write("⚠ Not enough data")
-        else:
-            st.subheader("📋 Prices")
-            st.write(prices)
-
-            # Chart
-            st.subheader("📊 Price Chart")
-
-            days = list(range(1, len(prices) + 1))
-
-            plt.figure()
-            plt.plot(days, prices, marker='o')
-            plt.title(stock)
-            plt.xlabel("Days")
-            plt.ylabel("Price")
-            st.pyplot(plt)
-
-            # Percentage Change
-            if prices[0] != 0:
-                change = ((prices[-1] - prices[0]) / prices[0]) * 100
-                st.write(f"📈 Percentage Change: {change:.2f}%")
+else:
+    st.info("No data added yet.")
