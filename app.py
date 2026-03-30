@@ -1,54 +1,77 @@
 import streamlit as st
 import matplotlib.pyplot as plt
 
-# Initialize session state (acts like array storage)
-if "prices" not in st.session_state:
-    st.session_state.prices = []
+# ---------------- ARRAY STORAGE ----------------
+# stocks = { "TATA": [100,120,110] }
+if "stocks" not in st.session_state:
+    st.session_state.stocks = {}
 
-# Title
-st.title("📊 Stock Price Tracker Dashboard")
+st.title("📊 Stock Price Tracker (Array Based)")
 
-# Input section
-st.subheader("➕ Add Daily Stock Price")
-price = st.number_input("Enter Price (₹)", min_value=0.0, step=1.0)
+# ---------------- INPUT ----------------
+st.sidebar.header("➕ Add Stock Data")
 
-if st.button("Add Price"):
-    st.session_state.prices.append(price)
-    st.success(f"Added ₹{price}")
+stock_name = st.sidebar.text_input("Enter Stock Name")
+price = st.sidebar.number_input("Enter Price (₹)", min_value=0.0)
 
-# Display prices
-if st.session_state.prices:
-    st.subheader("📋 Stored Prices")
-    st.write(st.session_state.prices)
+# ---------------- INSERT INTO ARRAY ----------------
+if st.sidebar.button("Add Price"):
+    if stock_name:
+        # Create array if not exists
+        if stock_name not in st.session_state.stocks:
+            st.session_state.stocks[stock_name] = []   # ARRAY CREATED
 
-    # Plot graph
-    st.subheader("📈 Price Chart")
+        # Insert into array
+        st.session_state.stocks[stock_name].append(price)
 
+        st.success(f"Added ₹{price} to {stock_name}")
+    else:
+        st.error("Enter stock name!")
+
+# ---------------- DISPLAY ----------------
+if st.session_state.stocks:
+
+    selected_stock = st.selectbox(
+        "Select Stock",
+        list(st.session_state.stocks.keys())
+    )
+
+    # ARRAY FETCH
+    prices = st.session_state.stocks[selected_stock]
+
+    st.subheader("📋 Stored Prices (Array)")
+    st.write(prices)
+
+    # ---------------- ARRAY ITERATION ----------------
+    st.subheader("📊 Price List")
+    for i in range(len(prices)):
+        st.write(f"Day {i+1}: ₹{prices[i]}")
+
+    # ---------------- GRAPH ----------------
+    st.subheader("📈 Graph")
     fig, ax = plt.subplots()
-    ax.plot(st.session_state.prices, marker='o')
-    ax.set_xlabel("Days")
-    ax.set_ylabel("Price (₹)")
-    ax.set_title("Stock Price Movement")
-
+    ax.plot(prices, marker='o')
     st.pyplot(fig)
 
-    # Analysis
+    # ---------------- ANALYSIS USING ARRAY ----------------
     st.subheader("📊 Analysis")
 
-    prices = st.session_state.prices
-    avg_price = sum(prices) / len(prices)
-    max_price = max(prices)
-    min_price = min(prices)
+    total = 0
+    for price in prices:   # ARRAY LOOP
+        total += price
 
-    st.write(f"Average Price: ₹{avg_price:.2f}")
-    st.write(f"Highest Price: ₹{max_price}")
-    st.write(f"Lowest Price: ₹{min_price}")
+    avg = total / len(prices)
 
-    # Trend
-    if prices[-1] > prices[0]:
-        st.success("📈 Upward Trend")
-    else:
-        st.error("📉 Downward Trend")
+    st.write(f"Average Price: ₹{avg:.2f}")
+    st.write(f"Max Price: ₹{max(prices)}")
+    st.write(f"Min Price: ₹{min(prices)}")
+
+    # ---------------- PRICE CHANGE ----------------
+    st.subheader("📉 Daily Change")
+
+    for i in range(1, len(prices)):
+        change = prices[i] - prices[i-1]
+        st.write(f"Day {i} → Day {i+1}: ₹{change}")
 
 else:
-    st.info("No data added yet.")
+    st.info("No data available")
