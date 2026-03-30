@@ -101,3 +101,44 @@ if st.session_state.stocks:
 
 else:
     st.info("No data available")
+# ---------------- PREDICTION USING ARRAY ----------------
+st.subheader("🤖 Prediction (Array-Based)")
+
+buy_score = 0
+sell_score = 0
+
+# Rule 1: Overall Trend
+if filtered_prices[-1] > filtered_prices[0]:
+    buy_score += 1
+else:
+    sell_score += 1
+
+# Rule 2: Average comparison
+avg_price = sum(filtered_prices) / len(filtered_prices)
+
+if filtered_prices[-1] > avg_price:
+    buy_score += 1
+else:
+    sell_score += 1
+
+# Rule 3: Last 3 days trend (ARRAY SLICING)
+if len(filtered_prices) >= 3:
+    last3 = filtered_prices[-3:]
+
+    if last3[2] > last3[1] > last3[0]:
+        buy_score += 1
+    elif last3[2] < last3[1] < last3[0]:
+        sell_score += 1
+
+# ---------------- FINAL DECISION ----------------
+st.subheader("📢 Final Suggestion")
+
+if buy_score > sell_score:
+    st.success("✅ BUY Signal")
+elif sell_score > buy_score:
+    st.error("❌ SELL Signal")
+else:
+    st.warning("⚖️ HOLD (No clear trend)")
+
+# Debug (optional)
+st.write(f"Buy Score: {buy_score}, Sell Score: {sell_score}")
